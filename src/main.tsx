@@ -7,8 +7,8 @@ import {exportCard,exportChat} from '../server/domain';
 import {readCard,readAvatar,download} from './import';
 import './style.css';
 import {selectAvailableProvider,applyGenerationToActive,canClearDraft} from './state';
-import {chooseAttempt,retryNetworkOnce,isUnconfirmed,type SendAttempt} from './retry';
-async function api(path:string,method='GET',data?:unknown){const r=await fetch('/api'+path,{method,headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});let result:any;try{result=await r.json();}catch(error){if(!r.ok)throw Error('通信に失敗しました ('+r.status+')');throw error;}if(!r.ok)throw Object.assign(Error(result.error||'通信に失敗しました'),{code:result.code});return result;}
+import {chooseAttempt,retryNetworkOnce,isUnconfirmed,decodeApiResponse,type SendAttempt} from './retry';
+async function api(path:string,method='GET',data?:unknown){const r=await fetch('/api'+path,{method,headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined});return decodeApiResponse(r);}
 const empty=()=>({name:'',description:'',greeting:'',avatar:'',favorite:false,stats:[]} as Omit<Character,'id'>);
 const defaults=[{id:'openrouter',name:'OpenRouter',model:'openai/gpt-4.1-mini'},{id:'gemini',name:'Google Gemini',model:'gemini-2.5-flash'},{id:'openai',name:'OpenAI',model:'gpt-4.1-mini'},{id:'anthropic',name:'Anthropic',model:'claude-sonnet-4-20250514'}];
 function Avatar({c,large=false}:{c?:Character|Omit<Character,'id'>;large?:boolean}){return <div className={'avatar '+(large?'large':'')}>{c?.avatar?<img src={c.avatar} alt=""/>:<><div className="head"/><div className="shoulders"/></>}</div>;}

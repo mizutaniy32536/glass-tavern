@@ -1,5 +1,5 @@
 export const providerIds=['openrouter','gemini','openai','anthropic'] as const;
-export async function generate(id:string,model:string,key:string,messages:{role:string;content:string}[]){let url='',headers:Record<string,string>={'Content-Type':'application/json'},body:any;
+export async function generate(id:string,model:string,key:string,messages:{role:string;content:string}[]){messages=messages.map(({role,content})=>({role,content}));let url='',headers:Record<string,string>={'Content-Type':'application/json'},body:any;
 if(id==='gemini'){url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;headers['x-goog-api-key']=key;body={systemInstruction:{parts:[{text:messages[0].content}]},contents:messages.slice(1).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]})),generationConfig:{maxOutputTokens:2048}};}
 else if(id==='anthropic'){url='https://api.anthropic.com/v1/messages';headers['x-api-key']=key;headers['anthropic-version']='2023-06-01';body={model,max_tokens:2048,system:messages[0].content,messages:messages.slice(1)};}
 else{url=id==='openrouter'?'https://openrouter.ai/api/v1/chat/completions':'https://api.openai.com/v1/chat/completions';headers.Authorization=`Bearer ${key}`;body={model,messages,max_tokens:2048};}
