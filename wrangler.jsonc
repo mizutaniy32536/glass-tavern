@@ -1,0 +1,27 @@
+{
+  "name": "glass-tavern",
+  "main": "server/index.ts",
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*",
+      "/auth/*",
+      "/privacy"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "glass-tavern",
+      "database_id": "f9bfbe38-cdcd-4056-9780-c54b3917a975",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "APP_ORIGIN": "https://glass-tavern.maino-drafts.workers.dev",
+    "GOOGLE_CLIENT_ID": "1064777903222-5srohlb1qdt0c6qvjtpnopvmi2hn09fv.apps.googleusercontent.com"
+  }
+}
