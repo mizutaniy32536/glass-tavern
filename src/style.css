@@ -10,3 +10,38 @@
 
 input[type="file"][hidden]{display:none!important}
 .cast-editor{border:1px solid #dddde5;background:#ffffff45;border-radius:18px;padding:18px;margin:15px 0 22px}.cast-editor header{margin-bottom:12px}.cast-editor>label{display:block;margin:16px 0}.cast-image{width:64px;height:64px;object-fit:cover;border-radius:16px}.story-reply{display:grid;gap:18px}.story-line{display:flex;gap:12px;align-items:flex-start}.story-line>div:last-child{min-width:0}.story-line .avatar{margin-top:24px}.story-narration{font-size:15px;line-height:2;white-space:pre-wrap;overflow-wrap:anywhere;color:#666875;padding:8px 18px;font-style:italic}.message.assistant .message-wrap{max-width:95%;width:100%}.person-stats h3{font-size:13px;margin:0 0 14px}.person-stats>div{margin:12px 0}.stats-panel{max-height:60dvh;overflow:auto}.person-stats+.person-stats{border-top:1px solid #dddde5;margin-top:18px;padding-top:18px}@media(max-width:700px){.cast-editor{padding:14px}.story-line{gap:8px}.story-narration{font-size:14px;padding:6px 12px}.story-line .avatar{width:30px;height:30px}}
+
+/* Theme preference is local to this browser; it also applies to loading and dialogs. */
+:root{color-scheme:light}.appearance{padding:22px;border-radius:22px;margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;gap:12px}.appearance h2{font-size:17px;font-weight:550}.appearance p{color:var(--muted);font-size:13px;margin-top:8px}.login-theme{display:flex;justify-content:flex-end;margin:-20px -15px 0}.theme-toggle{min-width:34px}
+:root[data-theme="dark"]{color-scheme:dark;color:#f4f4f5;background:#121212;--muted:#aaaab3;--line:#ffffff17;--glass:rgba(30,30,33,.85)}
+[data-theme="dark"] .app-shell,[data-theme="dark"] .login{background:#121212}
+[data-theme="dark"] .glass{border-color:#ffffff12;box-shadow:0 8px 30px #0002,inset 0 1px 0 #ffffff08}
+[data-theme="dark"] button:hover{background:#ffffff0d}
+[data-theme="dark"] nav button,[data-theme="dark"] label,[data-theme="dark"] .text-button,[data-theme="dark"] .filter,[data-theme="dark"] .card-body p,[data-theme="dark"] .speaker,[data-theme="dark"] .message-tools button,[data-theme="dark"] .composer-meta select,[data-theme="dark"] .search,[data-theme="dark"] .nav-label,[data-theme="dark"] .eyebrow,[data-theme="dark"] .count,[data-theme="dark"] .card-footer span,[data-theme="dark"] .composer-meta span{color:#b4b4be}
+[data-theme="dark"] nav button.selected,[data-theme="dark"] .filter.active{background:#ffffff13;color:#fff}
+[data-theme="dark"] .sidebar,[data-theme="dark"] .composer,[data-theme="dark"] .chat-header{background:#1b1b1de8}
+[data-theme="dark"] .bubble{background:#232325;border-color:#ffffff06;color:#f4f4f5;box-shadow:none}
+[data-theme="dark"] .user .bubble{background:#684bd3;border-color:#765be0;color:#fff}
+[data-theme="dark"] .user .speaker{color:#c2b5f4}
+[data-theme="dark"] .story-narration{color:#aaaab1}
+[data-theme="dark"] .primary,[data-theme="dark"] .send{background:#e4e4e9;border-color:#e4e4e9;color:#19191c}
+[data-theme="dark"] .primary:hover,[data-theme="dark"] .send:hover{background:#fff}
+[data-theme="dark"] .modal{background:#1b1b1ef5;box-shadow:0 30px 100px #0008}
+[data-theme="dark"] .modal-backdrop{background:#0008}
+[data-theme="dark"] .stats-panel{background:#222225f5}
+[data-theme="dark"] .cast-editor,[data-theme="dark"] .stat-editor{background:#ffffff05;border-color:#ffffff18}
+[data-theme="dark"] label input,[data-theme="dark"] label textarea,[data-theme="dark"] .stat-editor .section-title>input{background:#121214;border-color:#ffffff20;color:#f4f4f5}
+[data-theme="dark"] .search input{background:transparent;border:0}
+[data-theme="dark"] input::placeholder,[data-theme="dark"] textarea::placeholder{color:#94949f}
+[data-theme="dark"] input:focus,[data-theme="dark"] textarea:focus,[data-theme="dark"] select:focus{border-color:#b2a3e5;box-shadow:0 0 0 3px #b2a3e522}
+[data-theme="dark"] button:focus-visible,[data-theme="dark"] a:focus-visible{outline-color:#c2b5f4}
+[data-theme="dark"] .composer textarea{color:#f4f4f5}
+[data-theme="dark"] .person-stats+.person-stats{border-color:#ffffff18}
+[data-theme="dark"] .user-dot,[data-theme="dark"] .portrait{background:#323237}
+[data-theme="dark"] .favorite{background:#202024b0!important;border-color:#ffffff22!important;color:#bcbcc5}
+[data-theme="dark"] .is-favorite{color:#fff}
+[data-theme="dark"] .empty h2{color:#eee}
+[data-theme="dark"] .status-dot.connected{background:#ddd;box-shadow:0 0 0 4px #ffffff10}
+[data-theme="dark"] .skeleton{background-image:linear-gradient(100deg,#242427 30%,#35353a 50%,#242427 70%)}
+[data-theme="dark"] progress{accent-color:#b9b9c4}
+@media(max-width:700px){.appearance{padding:18px;flex-wrap:wrap}.appearance .button{min-height:44px}.chat-header .theme-toggle{width:40px;min-width:40px}}
