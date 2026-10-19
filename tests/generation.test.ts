@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import app from '../server/index';
 import {hash,encrypt} from '../server/crypto';
 import {generate} from '../server/providers';
-vi.mock('../server/providers',()=>({providerIds:['openrouter','gemini','openai','anthropic'],generate:vi.fn(),models:vi.fn()}));
+vi.mock('../server/providers',()=>({providerIds:['openrouter','gemini','openai','anthropic'],generate:vi.fn(),models:vi.fn(),generationLockSeconds:210}));
 let sql:DatabaseSync,env:any,failCompletion=false;
 const original={id:'chat',characterId:'char',messages:[{id:'a',role:'assistant',content:'hello',statsBefore:{affinity:5}}],stats:{affinity:8}};
 beforeEach(async()=>{vi.mocked(generate).mockReset();failCompletion=false;sql=new DatabaseSync(':memory:');for(const file of ['0001_initial.sql','0002_generation_token.sql','0003_generation_requests.sql','0004_backup_restores.sql','0005_backup_devices.sql','0006_user_settings.sql'])sql.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));const DB={prepare(query:string){let args:any[]=[];const statement={bind(...values:any[]){args=values;return statement;},async first(){return sql.prepare(query).get(...args)||null;},async all(){return {results:sql.prepare(query).all(...args)};},async run(){if(failCompletion&&query.startsWith("UPDATE generation_requests SET status='completed'"))throw Error('simulated database failure');return {meta:{changes:Number(sql.prepare(query).run(...args).changes)}};}};return statement;},async batch(statements:any[]){sql.exec('BEGIN');try{const results=await Promise.all(statements.map(s=>s.run()));sql.exec('COMMIT');return results;}catch(error){sql.exec('ROLLBACK');throw error;}}};env={DB,APP_ORIGIN:'https://example.com',KEY_ENCRYPTION_SECRET:btoa('a'.repeat(32))};sql.prepare('INSERT INTO sessions VALUES(?,?,?)').run(await hash('session'),'owner',9999999999);sql.prepare('INSERT INTO characters VALUES(?,?,?,?)').run('char','owner',JSON.stringify({name:'Test',description:'',greeting:'hello',stats:[{id:'affinity',name:'好感度',min:0,max:10,initial:0,instructions:''}]}),0);sql.prepare('INSERT INTO chats(id,owner,character_id,data,updated) VALUES(?,?,?,?,?)').run('chat','owner','char',JSON.stringify(original),0);sql.prepare('INSERT INTO providers VALUES(?,?,?,?,?)').run('owner','openai','test-model',await encrypt('not-a-real-key',env.KEY_ENCRYPTION_SECRET),0);});
@@ -86,3 +86,18 @@ it('round trips common rules through manual and automatic backup and preserves r
  await savePrompt('現在の指示',b.settings.systemPrompt);await restoreBackup(b,crypto.randomUUID(),false);expect((await promptSettings()).prompt).toBe('現在の指示');const old=structuredClone(b);delete old.settings.systemPrompt;await restoreBackup(old);expect((await promptSettings()).prompt).toBe('現在の指示');await restoreBackup(b);expect((await promptSettings()).prompt).toBe(b.settings.systemPrompt);
 });
 it('keeps story generation rules out of factual summarization',async()=>{const initial=await promptSettings();await savePrompt('会話生成専用の合言葉',initial.prompt);longChat();vi.mocked(generate).mockResolvedValue(summaryReply);await memoryRequest();expect(vi.mocked(generate).mock.calls[0][3][0].content).not.toContain('会話生成専用の合言葉');});
+
+it('replays the original memory failure and resumes from the saved checkpoint with a new ID',async()=>{
+ longChat();vi.mocked(generate).mockResolvedValue(summaryReply);await memoryRequest();const checkpoint=stored();
+ vi.mocked(generate).mockRejectedValueOnce(Error('AIの応答が時間内に完了しませんでした'));
+ const id=crypto.randomUUID(),first=await memoryRequest(id),failure=await first.json();
+ expect(failure).toMatchObject({code:'generation_failed'});
+ expect(JSON.stringify(failure)).toContain('時間内');expect(stored()).toEqual(checkpoint);
+ const calls=vi.mocked(generate).mock.calls.length;
+ expect(await (await memoryRequest(id)).json()).toEqual(failure);expect(generate).toHaveBeenCalledTimes(calls);
+ vi.mocked(generate).mockResolvedValue(summaryReply);
+ expect((await memoryRequest()).status).toBe(200);
+ expect(stored().memory.count).toBeGreaterThan(checkpoint.memory.count);
+ const supplied=JSON.parse(vi.mocked(generate).mock.calls.at(-1)![3][1].content);
+ expect(supplied.messages[0].content).toBe(checkpoint.messages[checkpoint.memory.count].content);
+});
