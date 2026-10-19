@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {filterModels,emptyModelPreferences} from '../src/model-picker';
+it('finds Gemma 4 without punctuation, spacing or case-sensitive exact IDs',()=>{const ids=['google/gemma-4-31b-it','google/gemma-4-26b-a4b-it','google/gemma-3-27b-it',...Array.from({length:400},(_,i)=>'other/model-'+i)];for(const q of ['gemma4','Gemma 4','ＧＥＭＭＡ４'])expect(filterModels(ids,q,emptyModelPreferences(),'')).toEqual(ids.slice(0,2).sort());});
+it('keeps the current model available and does not mutate selection when hiding or filtering',()=>{const p={...emptyModelPreferences(),favorites:['other'],hidden:['current','hidden'],onlyFavorites:true};expect(filterModels(['current','hidden','other','unused'],'',p,'current')).toEqual(['current','other']);expect(filterModels(['hidden'],'',p,'current',true)).toEqual(['current','hidden']);});
+it('matches multiple query terms and deduplicates cached favorites',()=>{const p={...emptyModelPreferences(),favorites:['google/gemma-4-31b-it']};expect(filterModels(['google/gemma-4-31b-it','google/gemma-4-26b-a4b-it'],'google 31b',p,'')).toEqual(p.favorites);});
