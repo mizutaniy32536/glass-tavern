@@ -1,3 +1,4 @@
+import {systemPromptSchema} from './system-prompt';
 import {z} from 'zod';
 import {normalizeStoredStory,validAvatar} from './domain';
 import {summarySchema,validMemory} from './memory';
@@ -7,7 +8,7 @@ const record=z.record(z.unknown());
 const stats=z.record(z.number().finite());
 const message=z.object({id,role:z.enum(['user','assistant']),content:z.string().max(30000),statsBefore:stats.optional(),source:record.optional()}).strict();
 const chat=z.object({id,characterId:id,messages:z.array(message).max(20000),stats,metadata:record.optional(),memoryNotes:z.string().max(10000).optional(),memory:z.object({version:z.literal(1),count:z.number().int().nonnegative(),digest:z.string(),summary:summarySchema}).strict().optional()}).strict();
-export const backupSchema=z.object({format:z.literal('glass-tavern-backup'),version:z.literal(1),exportedAt:z.string().datetime(),characters:z.array(z.object({id,data:z.unknown()}).strict()).max(500),chats:z.array(chat).max(500),settings:z.object({providers:z.array(z.object({id:z.enum(['openrouter','gemini','openai','anthropic']),model:z.string().min(1).max(160).regex(/^[a-zA-Z0-9._:/-]+$/),hidden:z.boolean()}).strict()).max(4),theme:z.enum(['light','dark']).optional(),selectedProvider:z.string().max(30).optional()}).strict()}).strict();
+export const backupSchema=z.object({format:z.literal('glass-tavern-backup'),version:z.literal(1),exportedAt:z.string().datetime(),characters:z.array(z.object({id,data:z.unknown()}).strict()).max(500),chats:z.array(chat).max(500),settings:z.object({systemPrompt:systemPromptSchema.optional(),providers:z.array(z.object({id:z.enum(['openrouter','gemini','openai','anthropic']),model:z.string().min(1).max(160).regex(/^[a-zA-Z0-9._:/-]+$/),hidden:z.boolean()}).strict()).max(4),theme:z.enum(['light','dark']).optional(),selectedProvider:z.string().max(30).optional()}).strict()}).strict();
 export type Backup=z.infer<typeof backupSchema>;
 export function parseBackup(raw:unknown):Backup {
  if(new TextEncoder().encode(JSON.stringify(raw)).length>BACKUP_LIMIT)throw Error('バックアップは20MB以内にしてください');
