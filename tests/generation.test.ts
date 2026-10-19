@@ -70,10 +70,10 @@ it('allows scoped read-only automatic backup tokens, rejects invalid tokens, and
 async function promptSettings(){return (await app.request('https://example.com/api/system-prompt',{headers:backupHeaders},env)).json() as Promise<any>;}
 function savePrompt(prompt:string,expectedPrompt:string,headers=backupHeaders){return app.request('https://example.com/api/system-prompt',{method:'PUT',headers,body:JSON.stringify({prompt,expectedPrompt})},env);}
 it('applies default and edited shared rules to send and regeneration while preserving output format',async()=>{
- const initial=await promptSettings();expect(initial.prompt).toContain('代替の恋愛相手');expect(initial.prompt).toContain('台詞・行動・内心');expect(initial.prompt).toContain('省略された設定');
+ const initial=await promptSettings();expect(initial.prompt).toContain('代替の恋愛相手');expect(initial.prompt).toContain('自然な補完は可能');expect(initial.prompt).toContain('【括弧の使い方】');expect(initial.prompt).toContain('省略された設定');
  vi.mocked(generate).mockResolvedValue('{"text":"続き"}');await request('send',{requestId:crypto.randomUUID(),content:'hello',provider:'openai'});expect(vi.mocked(generate).mock.calls.at(-1)![3][0].content).toContain(initial.prompt);
  const edited=initial.prompt+'\n短い会話を中心にする。';expect((await savePrompt(edited,initial.prompt)).status).toBe(200);expect((await promptSettings()).prompt).toBe(edited);
- await request('send',{requestId:crypto.randomUUID(),provider:'openai',regenerate:true});const system=vi.mocked(generate).mock.calls.at(-1)![3][0].content;expect(system).toContain(edited);expect(system).toContain('有効なJSONオブジェクトのみ');
+ await request('send',{requestId:crypto.randomUUID(),provider:'openai',regenerate:true});const system=vi.mocked(generate).mock.calls.at(-1)![3][0].content;expect(system).toContain(edited);expect(system).toContain('有効なJSONオブジェクトのみ');expect(system).not.toContain('発話・行動・感情を勝手に決めない');
 });
 it('isolates prompt preferences by account, rejects invalid or stale saves and unauthorized writes',async()=>{
  const initial=await promptSettings();expect((await savePrompt('変更A',initial.prompt)).status).toBe(200);expect((await savePrompt('変更B',initial.prompt)).status).toBe(409);expect((await savePrompt('', '変更A')).status).toBe(400);expect((await savePrompt('x'.repeat(12001),'変更A')).status).toBe(400);
