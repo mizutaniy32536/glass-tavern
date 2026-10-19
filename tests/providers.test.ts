@@ -6,3 +6,8 @@ it.each(['openai','openrouter','anthropic','gemini'])('sends only prompt content
 it.each(['openai','openrouter','anthropic','gemini'])('rejects a truncated but parseable summary from %s',async provider=>{const text='{"events":["fact"],"relationships":[],"promises":[],"unresolved":[]}';const fakeFetch=vi.fn().mockResolvedValue(new Response(JSON.stringify({choices:[{finish_reason:'length',message:{content:text}}],stop_reason:'max_tokens',content:[{text}],candidates:[{finishReason:'MAX_TOKENS',content:{parts:[{text}]}}]}),{status:200}));vi.stubGlobal('fetch',fakeFetch);await expect(generate(provider,'model','key',[{role:'system',content:'s'},{role:'user',content:'data'}],true)).rejects.toThrow('途中');const body=JSON.parse(fakeFetch.mock.calls[0][1].body);expect(provider==='gemini'?body.generationConfig.maxOutputTokens:body.max_tokens).toBe(8192);});
 
 it('allows long summaries while keeping the generation lock beyond both request timeouts',()=>{expect(generationTimeoutMs(true)).toBe(180000);expect(generationTimeoutMs(false)).toBe(120000);expect(generationLockSeconds*1000).toBeGreaterThan(generationTimeoutMs(true));});
+
+it.each(['openai','openrouter','anthropic','gemini'])('gives chat replies 4096 tokens without changing summary capacity: %s',async provider=>{
+ const f=vi.fn().mockResolvedValue(new Response(JSON.stringify({choices:[{message:{content:'ok'}}],content:[{text:'ok'}],candidates:[{content:{parts:[{text:'ok'}]}}]})));vi.stubGlobal('fetch',f);
+ await generate(provider,'model','key',[{role:'system',content:'test'},{role:'user',content:'test'}]);const body=JSON.parse(f.mock.calls[0][1].body);expect(provider==='gemini'?body.generationConfig.maxOutputTokens:body.max_tokens).toBe(4096);
+});
