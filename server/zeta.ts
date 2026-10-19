@@ -16,6 +16,6 @@ export function previewZeta(plot:unknown|undefined,history:unknown|undefined){
  }else{warnings.push('他の作者の非公開設定は含まれません。世界観と人物設定を手入力してください');story={title:h!.title||'読み込んだ会話',world:'',intro:'',cast:Array.from(new Set(h!.messages.filter(m=>m.role==='assistant').flatMap(m=>Array.from(m.content.matchAll(/^@([^@:\n：*]+)[:：]/gm),x=>x[1].trim())).filter(Boolean))).slice(0,12).map((name,i)=>({id:'history-cast-'+i,name,prompt:'',avatar:'',stats:[]})),lore:[],source:{zeta:{historyOnly:true}}};}
  if(!plot&&h){const names=new Set(h.messages.filter(m=>m.role==='assistant').flatMap(m=>Array.from(m.content.matchAll(/^@([^@:\n：*]+)[:：]/gm),x=>x[1].trim())).filter(Boolean));if(names.size>12)warnings.push('履歴の人物が12人を超えるため、人物設定は先頭12人です。履歴本文は全員分残ります');}
  if(!story.cast.length)story.cast=[{id:crypto.randomUUID(),name:'キャラクター',prompt:'',avatar:'',stats:[]}];
- warnings.push('保存した履歴はすべて残ります。AIに送る会話は直近60件です。必要な過去の出来事を続きのメモに記入してください');
+ warnings.push('保存した履歴はすべて残ります。AIに送る会話は直近60件です。それ以前の履歴は送信前に自動整理します（選択したAIの料金が発生）。手入力メモは任意です');
  return {story:characterSchema.parse(story),history:h,warnings:[...new Set(warnings)]};
 }

@@ -1,0 +1,4 @@
+export type MemoryAttempt={requestId:string;chatId:string;sendId:string};
+export function memoryForSend(memory:MemoryAttempt|null,send:{requestId:string;chatId:string}){return memory?.chatId===send.chatId&&memory.sendId===send.requestId?memory:null;}
+export function canAcceptMemory(pendingId:string|undefined,sendId:string,currentMemory:MemoryAttempt|null,attemptId:string){return pendingId===sendId&&currentMemory?.requestId===attemptId;}
+export function draftWasPersisted(before:{messages:{id:string;role:string;content:string}[]},after:{messages:{id:string;role:string;content:string}[]},content:string){const n=before.messages.length;return after.messages.length===n+2&&before.messages.every((m,i)=>m.id===after.messages[i].id)&&after.messages[n].role==='user'&&after.messages[n].content===content.trim()&&after.messages[n+1].role==='assistant';}

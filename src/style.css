@@ -53,3 +53,5 @@ input[type="file"][hidden]{display:none!important}
 .header-actions{flex-wrap:wrap}.header-actions .zeta-import-button{width:auto;height:auto;min-height:44px;border-radius:13px;padding:10px 12px;white-space:nowrap}
 
 .zeta-file-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}.zeta-file-name{overflow-wrap:anywhere;font-size:12px;color:var(--muted)}
+
+.memory-details{margin:8px 18px;padding:12px 16px;max-height:35vh;overflow:auto;font-size:13px}.memory-details summary{cursor:pointer;min-height:24px}.memory-details p,.memory-details li{white-space:pre-wrap;line-height:1.7}
