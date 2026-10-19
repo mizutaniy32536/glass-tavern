@@ -1,0 +1,8 @@
+import {it,expect,vi,afterEach} from 'vitest';
+import {hydrateZetaImages,zetaImageURL} from '../src/zeta-images';
+const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+vi.mock('../src/import',()=>({readAvatar:vi.fn(async()=>png)}));
+afterEach(()=>vi.unstubAllGlobals());
+it('only accepts the public Zeta CDN with no alternate origin or credentials',()=>{for(const url of ['http://image.zeta-ai.io/x','https://image.zeta-ai.io.evil/x','https://user@image.zeta-ai.io/x','https://image.zeta-ai.io:444/x','https://127.0.0.1/x','file:///tmp/x'])expect(zetaImageURL(url)).toBeUndefined();expect(zetaImageURL('https://image.zeta-ai.io/x')).toBe('https://image.zeta-ai.io/x');});
+it('uses archived image bytes without an outgoing request',async()=>{const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);const url='https://image.zeta-ai.io/x';const result=await hydrateZetaImages({name:'作品',imageUrl:url,characters:[{name:'葵',imageUrl:url}]},new Map([[url,new Uint8Array([1])]]));expect(result.cover).toBe(png);expect(result.characters[0].avatar).toBe(png);expect(fetcher).not.toHaveBeenCalled();});
+it('keeps text and reports unavailable portraits instead of failing the import',async()=>{vi.stubGlobal('fetch',vi.fn().mockRejectedValue(Error('CORS')));const raw={name:'作品',characters:[{name:'葵',description:'保持',imageUrl:'https://image.zeta-ai.io/x'}]};const result=await hydrateZetaImages(raw);expect(result.characters[0].description).toBe('保持');expect(result.characters[0].avatar).toBe('');expect(result.imageWarnings).toHaveLength(1);expect(fetch).toHaveBeenCalledWith('https://image.zeta-ai.io/x',expect.objectContaining({credentials:'omit',redirect:'error',referrerPolicy:'no-referrer'}));});
