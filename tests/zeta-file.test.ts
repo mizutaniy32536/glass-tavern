@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest';
+import {plotFromBackup} from '../src/zeta-file';
+function zip(text:string){const name=new TextEncoder().encode('plot.json'),body=new TextEncoder().encode(text),b=new Uint8Array(30+name.length+body.length),v=new DataView(b.buffer);v.setUint32(0,0x04034b50,true);v.setUint32(18,body.length,true);v.setUint32(22,body.length,true);v.setUint16(26,name.length,true);let crc=0xffffffff;for(const x of body){crc^=x;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}v.setUint32(14,(crc^0xffffffff)>>>0,true);b.set(name,30);b.set(body,30+name.length);return b;}
+it('reads plot JSON directly without extracting ZIP paths',()=>{expect(plotFromBackup(zip('{"name":"作品"}').buffer)).toEqual({name:'作品'});});
+it('rejects corruption truncated and unsupported compression',()=>{const b=zip('{}');b[b.length-1]=0;expect(()=>plotFromBackup(b.buffer)).toThrow('破損');const c=zip('{}');new DataView(c.buffer).setUint16(8,8,true);expect(()=>plotFromBackup(c.buffer)).toThrow();expect(()=>plotFromBackup(zip('{}').slice(0,-1).buffer)).toThrow();expect(()=>plotFromBackup(new ArrayBuffer(0))).toThrow();});

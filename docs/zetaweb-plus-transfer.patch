@@ -1,0 +1,86 @@
+--- a/content.js
++++ b/content.js
+@@ -137,7 +137,7 @@
+     });
+   }
+   function setBusy(busy) {
+-    for (const action of ['copy', 'save']) {
++    for (const action of ['copy', 'save', 'glass']) {
+       const button = document.querySelector(`[data-zeta-action="${action}"]`);
+       if (button) button.disabled = busy;
+     }
+@@ -168,7 +168,7 @@
+       setBusy(false);
+       if (!Array.isArray(data.messages) || data.room !== job.path.match(ROOM)?.[1]) return job.reject(new Error('履歴データを確認できません'));
+       const text = `${document.title}\n${location.href}\n保存: ${new Date().toLocaleString('ja-JP')}\n取得: ${data.messages.length} 発言\n履歴APIの過去側終端まで取得（zetaWeb Plus 1.2.0）\n\n${data.messages.map(formatMessage).join('\n\n──────────\n\n')}`;
+-      job.resolve({ text, count: data.messages.length, room: data.room, path: job.path });
++      job.resolve({ messages: data.messages, text, count: data.messages.length, room: data.room, path: job.path });
+     }
+   });
+   async function exportLog(kind) {
+@@ -197,6 +197,49 @@
+         setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+       }
+       notify(`${result.count} 発言を${kind === 'copy' ? 'コピー' : '保存'}しました（履歴の終端まで取得）`);
++    } catch (error) { notify(error.message, true); }
++  }
++  // Structured transfer: no credentials, no hidden author settings, no network upload.
++  function glassHistory(messages, room, title) {
++    const warnings = new Set();
++    const ids = new Set();
++    const normalized = messages.map(message => {
++      if (!message || typeof message.id !== 'string' || ids.has(message.id) || !Array.isArray(message.contents)) throw new Error('履歴の形式または重複を確認してください');
++      ids.add(message.id);
++      const sender = message.sender?.type;
++      if (!['USER', 'BOT'].includes(sender)) throw new Error('未対応の発言者があるため書き出しを中止しました');
++      const content = message.contents.map(part => {
++        if (part.type === 'TEXT' && typeof part.text === 'string') {
++          if (sender === 'USER') return part.text;
++          const name = part.speakerName || '';
++          if (typeof name !== 'string' || /[\r\n@:：*]/.test(name)) throw new Error('発言者名を会話形式に変換できません');
++          return '@' + name + ': ' + part.text;
++        }
++        if (part.type === 'TOPIC') {
++          warnings.add('トピック情報を地の文として取り込みます');
++          return '@: ' + [part.title, part.body].filter(v => typeof v === 'string').join('\n');
++        }
++        throw new Error('未対応の画像・特殊な発言があるため書き出しを中止しました。通常の全履歴保存を使用してください');
++      }).join('\n\n');
++      if (!content.trim() || content.length > 30000) throw new Error('空の発言または長すぎる発言があります');
++      return {id: message.id, role: sender === 'USER' ? 'user' : 'assistant', content};
++    });
++    const result = {format:'zeta-glass-tavern', version:1, kind:'history', roomId:room, title:title.replace(/\s*[-–]\s*zeta$/i,'').slice(0,100), exportedAt:new Date().toISOString(), messages:normalized, warnings:[...warnings]};
++    if (normalized.length > 2000 || new TextEncoder().encode(JSON.stringify(result)).length > 1400000) throw new Error('Glass Tavernの取り込み上限（2000発言・1.4MB）を超えています。通常の全履歴保存を使用してください');
++    return result;
++  }
++  async function exportGlass() {
++    try {
++      const result = await collectAll();
++      if (location.pathname !== result.path) return;
++      const bundle = glassHistory(result.messages, result.room, document.title);
++      const url = URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)], {type:'application/json;charset=utf-8'}));
++      const link = document.createElement('a');
++      link.href = url;
++      link.download = 'zeta-glass-' + result.room + '-' + Date.now() + '.json';
++      document.body.append(link); link.click(); link.remove();
++      setTimeout(() => URL.revokeObjectURL(url), 10000);
++      notify(result.count + '発言を書き出しました。Glass Tavernの「Zetaから読み込む」で選んでください');
+     } catch (error) { notify(error.message, true); }
+   }
+   const displayKey = 'zetaweb-plus-display-v1';
+@@ -369,6 +412,7 @@
+         <button type="button" data-zeta-action="loaded">読込済み部分をコピー</button>
+         <button type="button" data-zeta-action="copy">全履歴をコピー</button>
+         <button type="button" data-zeta-action="save">全履歴を保存</button>
++        <button type="button" data-zeta-action="glass">Glass Tavernへ書き出す</button>
+         <button type="button" data-zeta-action="stop" hidden>取得中止</button>
+         <button type="button" data-zeta-action="plot">↗ 元プロット</button>` : ''}
+       ${ROOM.test(location.pathname) ? displayControls() : ''}
+@@ -389,6 +433,7 @@
+       if (action === 'selection' || action === 'loaded') copyPart(action);
+       if (action === 'copy') exportLog('copy');
+       if (action === 'save') exportLog('save');
++      if (action === 'glass') exportGlass();
+       if (action === 'stop') fail('取得を中止しました。保存は行っていません');
+       if (action === 'plot') openPlot();
+     });

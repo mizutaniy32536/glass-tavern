@@ -49,3 +49,7 @@ input[type="file"][hidden]{display:none!important}
 /* Align user text with the character bubbles, after their avatar column. */
 .message.user{padding-left:44px}
 @media(max-width:700px){.message.user{padding-left:38px}}
+
+.header-actions{flex-wrap:wrap}.header-actions .zeta-import-button{width:auto;height:auto;min-height:44px;border-radius:13px;padding:10px 12px;white-space:nowrap}
+
+.zeta-file-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}.zeta-file-name{overflow-wrap:anywhere;font-size:12px;color:var(--muted)}
